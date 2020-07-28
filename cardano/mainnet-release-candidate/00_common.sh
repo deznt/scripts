@@ -9,8 +9,8 @@ socket="db/node.socket"
 genesisfile="config/mainnet-shelley-genesis.json"           #Shelley
 genesisfile_byron="config/mainnet-byron-genesis.json"       #Byron
 
-cardanocli="./cardano-cli"
-cardanonode="./cardano-node"
+cardanocli="cardano-cli"
+cardanonode="cardano-node"
 
 #byronToShelleyEpochs=1 #MC4
 byronToShelleyEpochs=308  #Mainnet
