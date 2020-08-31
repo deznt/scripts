@@ -2,7 +2,7 @@
 
 ## First of all, you don't need them all! [Examples](#examples) are at the bottom of this page :-)
 
-:bulb: **FOR USE WITH CARDANO-NODE & CARDANO-CLI: tags/1.18.0 !  (git checkout tags/1.18.0)**
+:bulb: **FOR USE WITH CARDANO-NODE & CARDANO-CLI: tags/1.19.0 !  (git checkout tags/1.19.0)**
 
 :bulb: **PLEASE USE THE CONFIG AND GENESIS FILES FROM [here](https://hydra.iohk.io/build/3627488/download/1/index.html) -> mainnet**
 
@@ -26,7 +26,7 @@ name.staking.addr, name.staking.skey/vkey, name.staking.cert/dereg-cert
 
 Node/Pool files:
 poolname.node.skey/vkey, poolname.node.counter, poolname.pool.cert/dereg-cert, poolname.pool.json, poolname.metadata.json
-poolname.vrf.skey/vkey, poolname.pool.id
+poolname.vrf.skey/vkey, poolname.pool.id, poolname.pool.id-bech
 poolname.kes-xxx.skey/vkey, poolname.node-xxx.opcert (xxx increments with each KES generation = poolname.kes.counter)
 poolname.kes.counter, poolname.kes-expire.json
 
@@ -68,11 +68,9 @@ nano poolname.pool.json
 chmod 400 poolname.pool.json
 ```
 
-## :bulb: ITN-Witness Ticker check for wallets
+## :bulb: ITN-Witness Ticker check for wallets and Extended-Metadata.json Infos
 
-**TEST FEATURE, NOT FOR MAINNET RIGHT NOW!!!**
-
-There are currently plans to implement an extended metadata.json for the pooldata. This can hold any kind of additional data for the registered pool. We see some Ticker spoofing getting more and more, so new people are trying to take over the Ticker from the people that ran a stakepool in the ITN and built up there reputation. There is no real way to forbid a double ticker registration, however, the "spoofing" stakepoolticker can be shown in the Daedalus/Yoroi/Pegasus wallet as a "spoof", so people can see this is not the real pool. I support this in my scripts. To anticipate in this (it is not fixed yet) you will need a "**jcli**" binary on your machine with the right path set in ```00_common.sh```. Prepare two files in the pool directory:
+There is now an implementation of the extended-metadata.json for the pooldata. This can hold any kind of additional data for the registered pool. We see some Ticker spoofing getting more and more, so new people are trying to take over the Ticker from the people that ran a stakepool in the ITN and built up there reputation. There is no real way to forbid a double ticker registration, however, the "spoofing" stakepoolticker can be shown in the Daedalus/Yoroi/Pegasus wallet as a "spoof", so people can see this is not the real pool. I support this in my scripts. To anticipate in this (it is not fixed yet) you will need a "**jcli**" binary on your machine with the right path set in ```00_common.sh```. Prepare two files in the pool directory:
 <br>```<poolname>.itn.skey``` this textfile should hold your ITN secret/private key
 <br>```<poolname>.itn.vkey``` this textfile should hold your ITN public/verification key
 <br>also you would need to add an additional URL **poolExtendedMetaUrl** for the next extended metadata json file on your webserver to your ```<poolname>.pool.json``` file like:
@@ -87,6 +85,11 @@ There are currently plans to implement an extended metadata.json for the pooldat
   }
 ``` 
 When you now generate your pool certificate, not only your ```<poolname>.metadata.json``` will be created as always, but also the ```<poolname>.extended-metadata.json``` that is holding your ITN witness to proof your Ticker ownership from the ITN. Upload BOTH to your webserver! :-)
+
+Additional Feature: If you wanna also include the extended-metadata format Adapools is currently using you can do so by providing additional metadata information in the file ```<poolname>.additional-metadata.json``` !<br>
+You can find an example of the Adapools format [here](https://a.adapools.org/extended-example).<br>
+So if you hold a file ```<poolname>.additional-metadata.json``` with additional data in the same folder, script 05a will also integrate this information into the ```<poolname>.extended-metadata.json``` :-)<br>
+:bulb: This is only a test and not an official usage of the extended-metadata data for now.
 
 ## Scriptfiles Syntax
 
@@ -192,10 +195,6 @@ When you now generate your pool certificate, not only your ```<poolname>.metadat
 If the pool was registered before (when there is a **regSubmitted** value in the name.pool.json file), the script will automatically do a re-registration instead of a registration. The difference is that you don't have to pay additional fees for a re-registration.<br>
   > :bulb: If something went wrong with the original pool registration, you can force the script to redo a normal registration by adding the keyword REG on the commandline like ```./05c_regStakepoolCert.sh mypool mywallet REG```<br>
 Also you can force the script to do a re-registration by adding the keyword REREG on the command line like ```./05c_regStakepoolCert.sh mypool mywallet REREG```
-
-* ~~**05d_checkPoolOnChain.sh:** checks the ledger-state about a given pool name -> poolname.pool.json
-<br>```./05d_checkPoolOnChain.sh <PoolNodeName>```
-<br>```./05d_checkPoolOnChain.sh mypool``` checks if the pool mypool is registered on the blockchain~~
 
 * **06_regDelegationCert.sh:** register a simple delegation (from 05b) name.deleg.cert 
 <br>```./06_regDelegationCert.sh <delegatorName> <nameOfPaymentAddr>```
@@ -333,7 +332,6 @@ If you wanna send over all funds from your mywallet call the script like
 1. Delegate to your own pool as owner -> pledge ```./05b_genDelegationCert.sh mypool owner``` this will generate the owner.deleg.cert
 1. :bulb: **Upload** the generated ```mypool.metadata.json``` file **onto your webserver** so that it is reachable via the URL you specified in the poolMetaUrl entry! Otherwise the next step will abort with an error.
 1. Register your stakepool on the blockchain ```./05c_regStakepoolCert.sh mypool owner.payment```    
-~~1. (Optional: you can verify that your stakepool is now on the blockchain by running ```./05d_checkPoolOnChain.sh mypool```<br>If you dont see it, wait a little and retry)~~
 
 Done.
 
@@ -355,7 +353,7 @@ Done.
 
 If you wanna update you pledge, costs, owners or metadata on a registered stakepool just do the following
 
-1. [Unlock](#file-autolock) the existing mypool.pool.json file and edit it. Only edit the poolOwnerAccount/poolRewardsAccount/poolPledge/poolCost/poolMargin and poolMetaXXX values, save it.
+1. [Unlock](#file-autolock) the existing mypool.pool.json file and edit it. Only edit the values above the "--- DO NOT EDIT BELOW THIS LINE ---" line, save it again. 
 1. Run ```./05a_genStakepoolCert.sh mypool``` to generate a new mypool.pool.cert file from it
 1. :bulb: **Upload** the new ```mypool.metadata.json``` file **onto your webserver** so that it is reachable via the URL you specified in the poolMetaUrl entry! Otherwise the next step will abort with an error.
 1. (Optional create delegation certificates if you have added an owner or an extra rewards account with script 05b)
@@ -377,7 +375,6 @@ Done.
 ### Claiming rewards from the ITN Testnet with only SK/PK keys
 
 If you ran a stakepool on the ITN and you only have your owner SK ed25519(e) and VK keys you can claim your rewards now<br>
-:bulb: You need the **cardano-cli from release/1.18.x** to work, save it to a new filename like ```cardano-cli-1.18.x```. Make sure to edit the right binary name in the new 00_common.sh !
 
 1. Convert your ITN keys into a Shelley Staking Address by running: 
    <br>```./0x_convertITNtoStakeAddress.sh <StakeAddressName> <Private_ITN_Key_File>  <Public_ITN_Key_File>```
