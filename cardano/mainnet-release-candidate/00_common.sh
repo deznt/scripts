@@ -2,8 +2,8 @@
 
 socket="db-mainnet/node.socket"
 
-genesisfile="configuration-mainnet/mainnet-shelley-genesis.json"           #Shelley
-genesisfile_byron="configuration-mainnet/mainnet-byron-genesis.json"       #Byron
+genesisfile="config/mainnet-shelley-genesis.json"           #Shelley
+genesisfile_byron="config/mainnet-byron-genesis.json"       #Byron
 
 cardanocli="cardano-cli"
 cardanonode="cardano-node"
